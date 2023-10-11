@@ -1,0 +1,5 @@
+{
+    "board": "arduino:avr:uno",
+    "sketch": "StateSpaceLoggerV.1.ino",
+    "port": "/dev/tty.usbmodem1101"
+}
