@@ -40,6 +40,7 @@ bool initialized = false;
     Serial.println("Success!");
     initialized = true;
   }
+ //success &= (myICM.initializeDMP() == ICM_20948_Stat_Ok); 
 }
 
 void loop()
@@ -192,3 +193,4 @@ void icm_20948_readings(ICM_20948_I2C *sensor)
   Serial.print(" ]");
   Serial.println();
 }
+
