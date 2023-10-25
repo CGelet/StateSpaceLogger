@@ -1,78 +1,194 @@
 #include <Wire.h>
-#include "SparkFunBME280.h"
-#include "SparkFunLSM6DSO.h"
-#include "MLX90393.h"
+#include "src/SparkFunBME280.h"
+#include "src/ICM_20948.h"
 
-MLX90393 mlx;
-MLX90393::txyz data;
-LSM6DSO myIMU;    // Default constructor is I2C, addr 0x6B
-BME280 mySensorA; // Uses default I2C address 0x77
+BME280 ES_Sens;      // Uses default I2C address 0x77
+ICM_20948_I2C myICM; // Uses default I2C address 0x69
+#define WIRE_PORT Wire
+#define AD0_VAL 1
 
 void setup()
 {
   Serial.begin(115200);
+  while (!Serial)
+  {
+  };
 
   Wire.begin();
-  mySensorA.beginI2C();
-  
-  if (myIMU.begin())
-    Serial.println("Ready.");
+  ES_Sens.beginI2C();
+  myICM.begin(WIRE_PORT, AD0_VAL);
+
+  WIRE_PORT.begin();
+  WIRE_PORT.setClock(400000);
+
+bool initialized = false;
+#ifdef USE_SPI
+    myICM.begin(CS_PIN, SPI_PORT);
+#else
+    myICM.begin(WIRE_PORT, AD0_VAL);
+#endif
+
+  Serial.print(F("Initialization of the sensor returned: "));
+  Serial.println(myICM.statusString());
+  if (myICM.status != ICM_20948_Stat_Ok)
+  {
+    Serial.println("Trying again...");
+    delay(500);
+  }
   else
   {
-    Serial.println("Could not connect to IMU.");
-    Serial.println("Freezing");
+    Serial.println("Success!");
+    initialized = true;
   }
-
-  if (myIMU.initialize(BASIC_SETTINGS))
-    Serial.println("Loaded Settings.");
-  
-  mlx.begin(); //Assumes I2C jumpers are GND. No DRDY pin used.
-  mlx.setOverSampling(0);
-  mlx.setDigitalFiltering(0);
 }
 
 void loop()
 {
-  /*
-  Serial.print("HumidityA: ");
-  Serial.print(mySensorA.readFloatHumidity(), 0);
 
-  Serial.print(" PressureA: ");
-  Serial.print(mySensorA.readFloatPressure(), 0);
+  // es_sensor_readings();
+  // Serial.println();
+  // delay(1000);
+  if (myICM.dataReady())
+  {
+  myICM.getAGMT();
+  icm_20948_readings(&myICM);
+  delay(30);
+  }
+  else
+  {
+    Serial.println("Data not ready!");
+    delay(500);
+  }
 
-  Serial.print(" TempA: ");
-  // Serial.print(mySensorA.readTempC(), 2);
-  Serial.print(mySensorA.readTempF(), 2);
+}
+
+void es_sensor_readings()
+{
+  Serial.print("Temperature: ");
+  Serial.print(ES_Sens.readTempC());
+  Serial.println(" C");
+
+  Serial.print("Humidity: ");
+  Serial.print(ES_Sens.readFloatHumidity());
+  Serial.println(" %");
+
+  Serial.print("Pressure: ");
+  Serial.print(ES_Sens.readFloatPressure());
+  Serial.println(" Pa");
+
+  Serial.print("Altitude: ");
+  Serial.print(ES_Sens.readFloatAltitudeMeters());
+  Serial.println(" m");
 
   Serial.println();
-  delay(500);
-  // Get all parameters
-  Serial.print("\nAccelerometer:\n");
-  Serial.print(" X = ");
-  Serial.println(myIMU.readFloatAccelX(), 3);
-  Serial.print(" Y = ");
-  Serial.println(myIMU.readFloatAccelY(), 3);
-  Serial.print(" Z = ");
-  Serial.println(myIMU.readFloatAccelZ(), 3);
+}
 
-  Serial.print("\nGyroscope:\n");
-  Serial.print(" X = ");
-  Serial.println(myIMU.readFloatGyroX(), 3);
-  Serial.print(" Y = ");
-  Serial.println(myIMU.readFloatGyroY(), 3);
-  Serial.print(" Z = ");
-  Serial.println(myIMU.readFloatGyroZ(), 3);
-  */
-  Serial.println();
-  delay(500);
-  
-  mlx.readData(data); //Read the values from the sensor
-  Serial.print("magX[");
-  Serial.print(data.x);
-  Serial.print("] magY[");
-  Serial.print(data.y);
-  Serial.print("] magZ[");
-  Serial.print(data.z);
-  delay(500);
+void printPaddedInt16b(int16_t val)
+{
+  if (val > 0)
+  {
+    Serial.print(" ");
+    if (val < 10000)
+    {
+      Serial.print("0");
+    }
+    if (val < 1000)
+    {
+      Serial.print("0");
+    }
+    if (val < 100)
+    {
+      Serial.print("0");
+    }
+    if (val < 10)
+    {
+      Serial.print("0");
+    }
+  }
+  else
+  {
+    Serial.print("-");
+    if (abs(val) < 10000)
+    {
+      Serial.print("0");
+    }
+    if (abs(val) < 1000)
+    {
+      Serial.print("0");
+    }
+    if (abs(val) < 100)
+    {
+      Serial.print("0");
+    }
+    if (abs(val) < 10)
+    {
+      Serial.print("0");
+    }
+  }
+  Serial.print(abs(val));
+}
+
+void printFormattedFloat(float val, uint8_t leading, uint8_t decimals)
+{
+  float aval = abs(val);
+  if (val < 0)
+  {
+    Serial.print("-");
+  }
+  else
+  {
+    Serial.print(" ");
+  }
+  for (uint8_t indi = 0; indi < leading; indi++)
+  {
+    uint32_t tenpow = 0;
+    if (indi < (leading - 1))
+    {
+      tenpow = 1;
+    }
+    for (uint8_t c = 0; c < (leading - 1 - indi); c++)
+    {
+      tenpow *= 10;
+    }
+    if (aval < tenpow)
+    {
+      Serial.print("0");
+    }
+    else
+    {
+      break;
+    }
+  }
+  if (val < 0)
+  {
+    Serial.print(-val, decimals);
+  }
+  else
+  {
+    Serial.print(val, decimals);
+  }
+}
+
+void icm_20948_readings(ICM_20948_I2C *sensor)
+{
+  Serial.print("Scaled. Acc (mg) [ ");
+  printFormattedFloat(sensor->accX(), 5, 2);
+  Serial.print(", ");
+  printFormattedFloat(sensor->accY(), 5, 2);
+  Serial.print(", ");
+  printFormattedFloat(sensor->accZ(), 5, 2);
+  Serial.print(" ], Gyr (DPS) [ ");
+  printFormattedFloat(sensor->gyrX(), 5, 2);
+  Serial.print(", ");
+  printFormattedFloat(sensor->gyrY(), 5, 2);
+  Serial.print(", ");
+  printFormattedFloat(sensor->gyrZ(), 5, 2);
+  Serial.print(" ], Mag (uT) [ ");
+  printFormattedFloat(sensor->magX(), 5, 2);
+  Serial.print(", ");
+  printFormattedFloat(sensor->magY(), 5, 2);
+  Serial.print(", ");
+  printFormattedFloat(sensor->magZ(), 5, 2);
+  Serial.print(" ]");
   Serial.println();
 }
