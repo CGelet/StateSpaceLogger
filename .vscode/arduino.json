@@ -1,6 +1,5 @@
 {
-    "board": "arduino:esp32:nano_nora",
+    "board": "esp32:esp32:nano_nora",
     "sketch": "StateSpaceLogger.ino",
-    "port": "/dev/tty.usbmodem1101",
-    "configuration": "PartitionScheme=default,PinNumbers=default,USBMode=default"
+    "port": "/dev/tty.usbmodem1101"
 }
