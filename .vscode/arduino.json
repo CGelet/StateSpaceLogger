@@ -1,5 +1,5 @@
 {
     "board": "esp32:esp32:nano_nora",
     "sketch": "StateSpaceLogger.ino",
-    "port": "/dev/tty.usbmodem1101"
+    "port": "/dev/tty.usbmodem3485187BF8742"
 }

@@ -219,6 +219,7 @@
                 "/Users/coltongelety/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11/tools/sdk/esp32s3/qio_opi/include",
                 "/Users/coltongelety/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11/cores/esp32",
                 "/Users/coltongelety/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11/variants/arduino_nano_nora",
+                "/Users/coltongelety/Documents/Arduino/libraries/electricui-embedded/src",
                 "/Users/coltongelety/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11/libraries/Wire/src",
                 "/Users/coltongelety/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11/libraries/SPI/src",
                 "/Users/coltongelety/Library/Arduino15/packages/esp32/tools/xtensa-esp32s3-elf-gcc/esp-2021r2-patch5-8.4.0/xtensa-esp32s3-elf/include/c++/8.4.0",
