@@ -13,16 +13,18 @@ ICM_20948_I2C myICM; // Uses default I2C address 0x69
 #define AD0_VAL 1
 
 // EUI Initialization
+eui_interface_t serial_comms = EUI_INTERFACE( &serial_write ); // Create an interface for Serial
 double q1;
 double q2;
 double q3;
+double q0;
 eui_message_t tracked_variables[] =
 {
-  EUI_INT32("Q1", q1),
-  EUI_INT32("Q2", q2),
-  EUI_INT32("Q3", q3),
+  EUI_DOUBLE("Q1", q1),
+  EUI_DOUBLE("Q2", q2),
+  EUI_DOUBLE("Q3", q3),
+  EUI_DOUBLE("Q0", q0),
 };
-eui_interface_t serial_comms = EUI_INTERFACE( &serial_write ); 
 
 void setup()
 {
@@ -34,7 +36,7 @@ void setup()
 
   eui_setup_interface( &serial_comms );
   EUI_TRACK( tracked_variables );
-  eui_setup_identifier( "MRT SSL", 5 );
+  eui_setup_identifier( "MRT SSL", 13 );
 
   // Others
   Wire.begin();
@@ -95,11 +97,14 @@ void setup()
 
 void loop()
 {
+  int old_time = 0;
+  int new_time = millis();
+  int dt = new_time - old_time;
   serial_rx_handler();
   // es_sensor_readings();
   // Serial.println();
   // delay(1000);
-  /*
+  
   if (myICM.dataReady())
   {
     myICM.getAGMT();
@@ -110,10 +115,11 @@ void loop()
   {
     Serial.println("Data not ready!");
     delay(500);
-  }*/
+  }
+  serial_rx_handler();
   dmp_readings();
 }
-
+// BME Functions
 void es_sensor_readings()
 {
   Serial.print("Temperature: ");
@@ -134,6 +140,8 @@ void es_sensor_readings()
 
   Serial.println();
 }
+
+// Print Functions
 
 void printPaddedInt16b(int16_t val)
 {
@@ -221,6 +229,8 @@ void printFormattedFloat(float val, uint8_t leading, uint8_t decimals)
   }
 }
 
+// ICM Functions
+
 void icm_20948_readings(ICM_20948_I2C *sensor)
 {
   Serial.print("Scaled. Acc (mg) [ ");
@@ -245,6 +255,8 @@ void icm_20948_readings(ICM_20948_I2C *sensor)
   Serial.println();
 }
 
+// DMP Functions
+
 void dmp_readings()
 {
   icm_20948_DMP_data_t data;
@@ -253,12 +265,15 @@ void dmp_readings()
   {
     if ((data.header & DMP_header_bitmap_Quat9) > 0) // We have asked for orientation data so we should receive Quat9
     {
-      double q1 = ((double)data.Quat9.Data.Q1) / 1073741824.0; // Convert to double. Divide by 2^30
-      double q2 = ((double)data.Quat9.Data.Q2) / 1073741824.0; // Convert to double. Divide by 2^30
-      double q3 = ((double)data.Quat9.Data.Q3) / 1073741824.0; // Convert to double. Divide by 2^30
-      double q0 = sqrt(1.0 - ((q1 * q1) + (q2 * q2) + (q3 * q3)));
+      q1 = ((double)data.Quat9.Data.Q1) / 1073741824.0; // Convert to double. Divide by 2^30
+      q2 = ((double)data.Quat9.Data.Q2) / 1073741824.0; // Convert to double. Divide by 2^30
+      q3 = ((double)data.Quat9.Data.Q3) / 1073741824.0; // Convert to double. Divide by 2^30
+      q0 = sqrt(1.0 - ((q1 * q1) + (q2 * q2) + (q3 * q3)));
 #ifndef QUAT_ANIMATION
-      Serial.print(F("Q1:"));
+
+     Serial.print(F("Q0:"));
+      Serial.print(q0, 3);
+     Serial.print(F("Q1:"));
       Serial.print(q1, 3);
       Serial.print(F(" Q2:"));
       Serial.print(q2, 3);
@@ -297,7 +312,8 @@ void serial_rx_handler()
     eui_parse( Serial.read(), &serial_comms );  // Ingest a byte
   }
 }
-void serial_write( uint8_t *data, uint16_t len )
+
+void serial_write( uint8_t *data,  uint16_t len )
 {
   Serial.write( data, len ); //output on the main serial port
 }
