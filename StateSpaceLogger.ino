@@ -24,6 +24,7 @@ int UV4 = A6;
 // Variable Setup
 int Iteration = 0;
 int KeepOn;
+int SyncStatus = 0;
 
 // IMU Sensors
 float Accel[3];
@@ -31,10 +32,16 @@ float Gyro[3];
 float Mag[3];
 
 // UV Sensors
+float meanVal;
 float UV1Val;
 float UV2Val;
 float UV3Val;
 float UV4Val;
+float sum1;
+float sum2;
+float sum3;
+float sum4;
+
 
 // ES Sensors
 float Temp;
@@ -45,15 +52,21 @@ float Altitude;
 void setup()
 {
     Serial.begin(9600); // Setting Baud Rate to 9600
-    while (!Serial)
+    /*while (!Serial)
     {
-    }; // Waiting for Serial to register
+    };*/ // Waiting for Serial to register
 
     // Sensor / I2C / Logger Setup
     Wire.begin();          // Starting I2C
     Wire.setClock(400000); // Setting I2C Clock Rate to 400kHz
     ES_Sens.beginI2C();    // Starting BME280
     LOGGER.begin();        // Starting OpenLog
+
+    // UV Setup
+    pinMode(UV1, INPUT);
+    pinMode(UV2, INPUT);
+    pinMode(UV3, INPUT);
+    pinMode(UV4, INPUT);
 
     // SyncPin Setup
     pinMode(SyncPin, OUTPUT);
@@ -64,7 +77,7 @@ void setup()
 
     // Logger Setup
     LOGGER.append("FlightData.txt");
-    LOGGER.println("A3 G3 M3 T P H U1 U2 U3 U4"); // Data order Accel - Gyro - Mag - Temp - Press - Humid - (UV) 1 - 2 - 3 - 4
+    LOGGER.println("AX AY AZ GX GY GZ MX MY MZ T P H U1 U2 U3 U4 SP"); // Data order Accel - Gyro - Mag - Temp - Press - Humid - (UV) 1 - 2 - 3 - 4
     while (!IMU_Init)
     {
         IMU_Sens.begin(Wire, AD0_VAL); // Starting ICM20948
@@ -97,12 +110,14 @@ void loop()
     Iteration = Iteration + 1;            // Adding to the iteration counter
     if (Iteration == 20)                  // Checking if the iteration counter is at 20
     {
+        SyncStatus = 1;       // Setting the Sync Status to 1
         analogWrite(SyncPin, 255); // Writing to the Sync Pin awhen the iteration counter is at 20
         Iteration = 0;             // resetting the iteration counter
         KeepOn = random(3, 8);     // Setting the number of iterations to keep the sync pin on
     }
     if (Iteration == KeepOn) // Checking if the iteration counter is equal to the number of iterations to keep the sync pin on
     {
+        SyncStatus = 0;                        // Setting the Sync Status to 0
         analogWrite(SyncPin, 0); // Turning off the sync pin when the iteration counter is equal to the number of iterations to keep the sync pin on
     }
     AGMT_Readings(&IMU_Sens);                   // Calling AGMT Function to read values
@@ -182,7 +197,7 @@ void AGMT_Readings(ICM_20948_I2C *sensor)
     if (IMU_Sens.dataReady())
     {
         // Accelerometer, Gyroscope, Magnetometer, and Temperature Readings
-        Accel[0] = IMU_Sens.accX();
+        Accel[0] = IMU_Sens.accX() * -1;
         Accel[1] = IMU_Sens.accY();
         Accel[2] = IMU_Sens.accZ();
         Gyro[0] = IMU_Sens.gyrX();
@@ -243,7 +258,7 @@ void AGMT_Readings(ICM_20948_I2C *sensor)
 void UVSensors()
 {
     int sensorValue;
-    long sum1;
+    sum1 = 0;
     for (int i = 0; i < 100; i++)
     {
         sensorValue = analogRead(UV1);
@@ -251,17 +266,16 @@ void UVSensors()
         sum1 = sensorValue + sum1;
         delay(2);
     }
-    long meanVal = sum1 / 100; // get mean value
+    meanVal = sum1 / 100; // get mean value
     UV1Val = (meanVal * 1000 / 4.3 - 83) / 21;
     Serial.print("The current UV index is:");
     Serial.print((meanVal * 1000 / 4.3 - 83) / 21); // get a detailed calculating expression for UV index in schematic files.
     Serial.print("\n");
 
-    long sum2;
+    sum2 = 0;
     for (int i = 0; i < 100; i++)
     {
-        sensorValue = analogRead(UV2);
-        //Serial.println(sensorValue);
+        sensorValue = analogRead(A7);
         sum2 = sensorValue + sum2;
         delay(2);
     }
@@ -271,12 +285,13 @@ void UVSensors()
     Serial.print((meanVal * 1000 / 4.3 - 83) / 21); // get a detailed calculating expression for UV index in schematic files.
     Serial.print("\n");
 
-    long sum3;
+
+    sum3 = 0 ;
     for (int i = 0; i < 100; i++)
     {
         sensorValue = analogRead(UV3);
-        //Serial.println(sensorValue);
-        sum2 = sensorValue + sum3;
+        // Serial.println(sensorValue);
+        sum3 = sensorValue + sum3;
         delay(2);
     }
     meanVal = sum3 / 100; // get mean value
@@ -285,12 +300,12 @@ void UVSensors()
     Serial.print((meanVal * 1000 / 4.3 - 83) / 21); // get a detailed calculating expression for UV index in schematic files.
     Serial.print("\n");
 
-    long sum4;
+    sum4 = 0;
     for (int i = 0; i < 100; i++)
     {
         sensorValue = analogRead(UV4);
         //Serial.println(sensorValue);
-        sum2 = sensorValue + sum4;
+        sum4 = sensorValue + sum4;
         delay(2);
     }
     meanVal = sum4 / 100; // get mean value
@@ -353,6 +368,7 @@ void LogData()
     LOGGER.print(" ");
     LOGGER.print(UV4Val);
     LOGGER.print(" ");
+    LOGGER.print(SyncStatus);
 
     LOGGER.println();
 }
