@@ -19,7 +19,6 @@ int SyncPin = A0;
 int UV1 = A1;
 int UV2 = A2;
 int UV3 = A3;
-int UV4 = A6;
 
 // Variable Setup
 int Iteration = 0;
@@ -36,11 +35,12 @@ float meanVal;
 float UV1Val;
 float UV2Val;
 float UV3Val;
-float UV4Val;
 float sum1;
 float sum2;
 float sum3;
-float sum4;
+int UV1Volt;
+int UV2Volt;
+int UV3Volt;
 
 
 // ES Sensors
@@ -66,7 +66,6 @@ void setup()
     pinMode(UV1, INPUT);
     pinMode(UV2, INPUT);
     pinMode(UV3, INPUT);
-    pinMode(UV4, INPUT);
 
     // SyncPin Setup
     pinMode(SyncPin, OUTPUT);
@@ -77,7 +76,7 @@ void setup()
 
     // Logger Setup
     LOGGER.append("FlightData.txt");
-    LOGGER.println("AX AY AZ GX GY GZ MX MY MZ T P H U1 U2 U3 U4 SP"); // Data order Accel - Gyro - Mag - Temp - Press - Humid - (UV) 1 - 2 - 3 - 4
+    LOGGER.println("AX AY AZ GX GY GZ MX MY MZ T P H U1 U2 U3 SP"); // Data order Accel - Gyro - Mag - Temp - Press - Humid - (UV) 1 - 2 - 3 - 4
     while (!IMU_Init)
     {
         IMU_Sens.begin(Wire, AD0_VAL); // Starting ICM20948
@@ -266,23 +265,23 @@ void UVSensors()
         sum1 = sensorValue + sum1;
         delay(2);
     }
-    meanVal = sum1 / 100; // get mean value
-    UV1Val = (meanVal * 1000 / 4.3 - 83) / 21;
+    UV1Volt = sum1 / 100; // get mean value
+    UV1Val = (UV1Volt * 1000 / 4.3 - 83) / 21;
     Serial.print("The current UV index is:");
-    Serial.print((meanVal * 1000 / 4.3 - 83) / 21); // get a detailed calculating expression for UV index in schematic files.
+    Serial.print((UV1Volt * 1000 / 4.3 - 83) / 21); // get a detailed calculating expression for UV index in schematic files.
     Serial.print("\n");
 
     sum2 = 0;
     for (int i = 0; i < 100; i++)
     {
-        sensorValue = analogRead(A7);
+        sensorValue = analogRead(UV2);
         sum2 = sensorValue + sum2;
         delay(2);
     }
-    meanVal = sum2 / 100; // get mean value
-    UV2Val = (meanVal * 1000 / 4.3 - 83) / 21;
+    UV2Volt = sum2 / 100; // get mean value
+    UV2Val = (UV2Volt * 1000 / 4.3 - 83) / 21;
     Serial.print("The current UV index is:");
-    Serial.print((meanVal * 1000 / 4.3 - 83) / 21); // get a detailed calculating expression for UV index in schematic files.
+    Serial.print((UV2Volt * 1000 / 4.3 - 83) / 21); // get a detailed calculating expression for UV index in schematic files.
     Serial.print("\n");
 
 
@@ -294,24 +293,10 @@ void UVSensors()
         sum3 = sensorValue + sum3;
         delay(2);
     }
-    meanVal = sum3 / 100; // get mean value
-    UV3Val = (meanVal * 1000 / 4.3 - 83) / 21;
+    UV3Volt = sum3 / 100; // get mean value
+    UV3Val = (UV3Volt * 1000 / 4.3 - 83) / 21;
     Serial.print("The current UV index is:");
-    Serial.print((meanVal * 1000 / 4.3 - 83) / 21); // get a detailed calculating expression for UV index in schematic files.
-    Serial.print("\n");
-
-    sum4 = 0;
-    for (int i = 0; i < 100; i++)
-    {
-        sensorValue = analogRead(UV4);
-        //Serial.println(sensorValue);
-        sum4 = sensorValue + sum4;
-        delay(2);
-    }
-    meanVal = sum4 / 100; // get mean value
-    UV4Val = (meanVal * 1000 / 4.3 - 83) / 21;
-    Serial.print("The current UV index is:");
-    Serial.print((meanVal * 1000 / 4.3 - 83) / 21); // get a detailed calculating expression for UV index in schematic files.
+    Serial.print((UV3Volt * 1000 / 4.3 - 83) / 21); // get a detailed calculating expression for UV index in schematic files.
     Serial.print("\n");
 }
 
@@ -360,13 +345,12 @@ void LogData()
     LOGGER.print(Humidity);
     LOGGER.print(" ");
 
-    LOGGER.print(UV1Val);
+    LOGGER.print(UV1Volt); // These UV values are the raw analog readings averaged over 100 samples
     LOGGER.print(" ");
-    LOGGER.print(UV2Val);
+    LOGGER.print(UV2Volt);
     LOGGER.print(" ");
-    LOGGER.print(UV3Val);
-    LOGGER.print(" ");
-    LOGGER.print(UV4Val);
+    LOGGER.print(UV3Volt);
+
     LOGGER.print(" ");
     LOGGER.print(SyncStatus);
 
