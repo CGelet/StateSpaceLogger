@@ -1,2 +1,3 @@
-# Microgravity Personal Programs
+# State Space Logger
+## Microgravity Research Team
  
