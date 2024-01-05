@@ -261,14 +261,12 @@ void UVSensors()
     for (int i = 0; i < 100; i++)
     {
         sensorValue = analogRead(UV1);
-        //Serial.println(sensorValue);
         sum1 = sensorValue + sum1;
         delay(2);
     }
     UV1Volt = sum1 / 100; // get mean value
-    UV1Val = (UV1Volt * 1000 / 4.3 - 83) / 21;
-    Serial.print("The current UV1 index is:");
-    Serial.print((UV1Volt * 1000 / 4.3 - 83) / 21); // get a detailed calculating expression for UV index in schematic files.
+    Serial.print("The current UV1 Voltage is:");
+    Serial.print(UV1Volt); // get a detailed calculating expression for UV index in schematic files.
     Serial.print("\n");
 
     sum2 = 0;
@@ -279,9 +277,8 @@ void UVSensors()
         delay(2);
     }
     UV2Volt = sum2 / 100; // get mean value
-    UV2Val = (UV2Volt * 1000 / 4.3 - 83) / 21;
-    Serial.print("The current UV2 index is:");
-    Serial.print((UV2Volt * 1000 / 4.3 - 83) / 21); // get a detailed calculating expression for UV index in schematic files.
+    Serial.print("The current UV2 Voltage is:");
+    Serial.print(UV2Volt); // get a detailed calculating expression for UV index in schematic files.
     Serial.print("\n");
 
 
@@ -289,14 +286,12 @@ void UVSensors()
     for (int i = 0; i < 100; i++)
     {
         sensorValue = analogRead(UV3);
-        // Serial.println(sensorValue);
         sum3 = sensorValue + sum3;
         delay(2);
     }
     UV3Volt = sum3 / 100; // get mean value
-    UV3Val = (UV3Volt * 1000 / 4.3 - 83) / 21;
-    Serial.print("The current UV3 index is:");
-    Serial.print((UV3Volt * 1000 / 4.3 - 83) / 21); // get a detailed calculating expression for UV index in schematic files.
+    Serial.print("The current UV3 Voltage is:");
+    Serial.print(UV3Volt); // get a detailed calculating expression for UV index in schematic files.
     Serial.print("\n");
 }
 
