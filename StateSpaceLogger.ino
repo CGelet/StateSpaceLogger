@@ -3,10 +3,6 @@
 #include <SparkFun_Qwiic_OpenLog_Arduino_Library.h>
 #include "src/SparkFunBME280.h"
 #include "src/ICM_20948.h"
-// Will need UV Sensor Setup
-
-// Analog Pin Setup
-// GUVAS12SD uv(A0);
 
 // Digital Pin Setup
 BME280 ES_Sens;         // Uses default I2C address 0x77
