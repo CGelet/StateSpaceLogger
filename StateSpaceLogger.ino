@@ -282,6 +282,7 @@ void UVSensors()
     for (int i = 0; i < 100; i++)
     {
         sensorValue = analogRead(UV3);
+        Serial.println(sensorValue);
         sum3 = sensorValue + sum3;
         delay(2);
     }
